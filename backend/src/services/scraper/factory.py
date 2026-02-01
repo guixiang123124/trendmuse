@@ -10,6 +10,8 @@ from .base import BaseScraper
 from .mock import MockScraper
 from .generic import GenericScraper
 from .shein import SheinScraper
+from .zara import ZaraScraper
+from .hm import HMScraper
 
 
 class ScraperFactory:
@@ -19,13 +21,16 @@ class ScraperFactory:
     
     # Map of domain patterns to scraper classes
     SCRAPER_MAP = {
+        # SHEIN
         "shein": SheinScraper,
         "us.shein": SheinScraper,
         "m.shein": SheinScraper,
-        # Add more site-specific scrapers here:
-        # "zara": ZaraScraper,
-        # "hm": HMScraper,
-        # "asos": AsosScraper,
+        # ZARA
+        "zara": ZaraScraper,
+        # H&M
+        "hm.com": HMScraper,
+        "www2.hm": HMScraper,
+        "h&m": HMScraper,
     }
     
     @classmethod
