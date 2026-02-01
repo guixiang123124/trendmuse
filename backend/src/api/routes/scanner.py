@@ -15,7 +15,7 @@ from src.models.schemas import (
     FashionCategory,
     APIResponse
 )
-from src.services.scraper import MockScraper, GenericScraper
+from src.services.scraper import ScraperFactory
 from src.services.analyzer import TrendAnalyzer
 from src.core.config import get_settings
 
@@ -40,11 +40,15 @@ async def scan_website(request: ScanRequest):
     start_time = time.time()
     
     try:
-        # Choose scraper based on mode
-        if settings.demo_mode:
-            scraper = MockScraper(timeout=settings.scrape_timeout)
-        else:
-            scraper = GenericScraper(timeout=settings.scrape_timeout)
+        # Get appropriate scraper for the URL
+        # Allow force_real to override demo_mode
+        use_demo = settings.demo_mode and not request.force_real
+        
+        scraper = ScraperFactory.get_scraper(
+            url=request.url,
+            demo_mode=use_demo,
+            timeout=settings.scrape_timeout
+        )
         
         # Perform scan
         items = await scraper.scrape(
@@ -147,6 +151,18 @@ async def get_available_categories():
     Get list of available fashion categories
     """
     return [cat.value for cat in FashionCategory]
+
+
+@router.get("/supported-sites")
+async def get_supported_sites():
+    """
+    Get list of websites with dedicated scrapers
+    """
+    sites = ScraperFactory.get_supported_sites()
+    return {
+        "supported_sites": sites,
+        "note": "Sites not in this list will use the generic scraper"
+    }
 
 
 @router.post("/demo", response_model=ScanResult)

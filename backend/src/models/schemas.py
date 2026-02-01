@@ -36,6 +36,7 @@ class ScanRequest(BaseModel):
     url: str = Field(..., description="Website URL to scan")
     max_items: int = Field(default=20, ge=1, le=100, description="Maximum items to fetch")
     category_filter: Optional[FashionCategory] = Field(default=None, description="Filter by category")
+    force_real: bool = Field(default=False, description="Force real scraping even in demo mode")
 
 
 class FashionItem(BaseModel):
