@@ -9,12 +9,16 @@ import {
   Sparkles, 
   PenTool, 
   Settings,
-  HelpCircle
+  HelpCircle,
+  BarChart3,
+  Flame
 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
+  { href: "/trending", label: "🔥 Trending", icon: Flame },
   { href: "/scanner", label: "Trend Scanner", icon: TrendingUp },
+  { href: "/trends", label: "Trend Analytics", icon: BarChart3 },
   { href: "/generator", label: "Design Generator", icon: Sparkles },
   { href: "/converter", label: "Sketch Converter", icon: PenTool },
 ];

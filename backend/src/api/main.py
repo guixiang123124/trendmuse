@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 import time
 
 from src.core.config import get_settings
-from src.api.routes import scanner, generator, converter
+from src.api.routes import scanner, generator, converter, trends
 from src.models.schemas import HealthResponse
 
 
@@ -78,6 +78,7 @@ async def add_process_time_header(request: Request, call_next):
 app.include_router(scanner.router, prefix="/api")
 app.include_router(generator.router, prefix="/api")
 app.include_router(converter.router, prefix="/api")
+app.include_router(trends.router, prefix="/api")
 
 
 # Health check endpoint
@@ -132,6 +133,14 @@ async def api_overview():
             "POST /api/converter/convert": "Convert image to sketch",
             "GET /api/converter/sketches": "Get converted sketches",
             "GET /api/converter/styles": "Get sketch styles"
+        },
+        "trends": {
+            "GET /api/trends/stats": "Get database statistics",
+            "GET /api/trends/products": "Query products with filters",
+            "GET /api/trends/summary": "Get trend dashboard summary",
+            "GET /api/trends/price-distribution": "Get price distribution data",
+            "GET /api/trends/top-colors": "Get most common colors",
+            "GET /api/trends/top-tags": "Get most common tags"
         }
     }
 

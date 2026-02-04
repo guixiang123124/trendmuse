@@ -12,6 +12,9 @@ from .generic import GenericScraper
 from .shein import SheinScraper
 from .zara import ZaraScraper
 from .hm import HMScraper
+from .shopify import ShopifyScraper, is_shopify_store
+from .tullabee import TullabeeScraper
+from .lillypulitzer import LillyPulitzerScraper
 
 
 class ScraperFactory:
@@ -31,6 +34,21 @@ class ScraperFactory:
         "hm.com": HMScraper,
         "www2.hm": HMScraper,
         "h&m": HMScraper,
+        # Tullabee (Cloudflare protected - needs Playwright)
+        "tullabee.com": TullabeeScraper,
+        # Lilly Pulitzer (Demandware - needs Playwright)
+        "lillypulitzer.com": LillyPulitzerScraper,
+        # Shopify stores (kids fashion)
+        "classicwhimsy.com": ShopifyScraper,
+        "shrimpandgritskids.com": ShopifyScraper,
+        "jamiekay.com": ShopifyScraper,
+        "gigiandmax.com": ShopifyScraper,
+        "stitchyfish.com": ShopifyScraper,
+        "littlebearsmocks.com": ShopifyScraper,
+        "zuccinikids.com": ShopifyScraper,
+        "marienicoleclothing.com": ShopifyScraper,
+        "morninglavender.com": ShopifyScraper,
+        "matildajaneclothing.com": ShopifyScraper,
     }
     
     @classmethod

@@ -14,9 +14,11 @@ from src.models.schemas import (
     GeneratedDesign,
     GenerationStyle,
     FashionItem,
+    FashionCategory,
     ColorPalette
 )
 from src.services.image_gen import ImageGenerationService
+from src.services.database import get_database
 from src.core.config import get_settings
 
 router = APIRouter(prefix="/generator", tags=["Generator"])
@@ -24,16 +26,77 @@ router = APIRouter(prefix="/generator", tags=["Generator"])
 # In-memory storage for demo
 _generated_designs: List[GeneratedDesign] = []
 
-# Import scanned items from scanner module
+# Import scanned items from scanner module (fallback)
 from .scanner import _scanned_items
 
 
 def _get_item_by_id(item_id: str) -> Optional[FashionItem]:
-    """Get fashion item by ID from scanned items"""
+    """Get fashion item by ID from scanned items or database"""
+    # First check in-memory items
     for item in _scanned_items:
         if item.id == item_id:
             return item
+    
+    # Then check database
+    db = get_database()
+    # Try to find by ID in database
+    with db._get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM products WHERE id = ?", (item_id,))
+        row = cursor.fetchone()
+        if row:
+            product = db._row_to_dict(row)
+            # Convert to FashionItem
+            return FashionItem(
+                id=product['id'],
+                name=product['name'],
+                price=product['price'] or 0,
+                currency=product.get('currency', 'USD'),
+                original_price=product.get('original_price'),
+                image_url=product.get('image_url', ''),
+                product_url=product.get('product_url', ''),
+                category=FashionCategory(product.get('category', 'other')),
+                brand=product.get('brand', ''),
+                reviews_count=product.get('reviews_count', 0),
+                rating=product.get('rating', 0),
+                sales_count=0,
+                trend_score=50,
+                trend_level="stable",
+                colors=product.get('colors', []),
+                tags=product.get('tags', [])
+            )
+    
     return None
+
+
+@router.get("/items-from-db")
+async def get_items_from_database(
+    limit: int = Query(20, ge=1, le=100),
+    source: Optional[str] = None,
+    category: Optional[str] = None
+):
+    """
+    Get fashion items from database for the generator.
+    Returns items with images that can be used for AI generation.
+    """
+    db = get_database()
+    products = db.get_products(source=source, category=category, limit=limit)
+    
+    # Convert to format expected by frontend
+    items = []
+    for p in products:
+        if p.get('image_url'):  # Only include items with images
+            items.append({
+                "id": p['id'],
+                "name": p['name'],
+                "price": p.get('price', 0),
+                "image_url": p['image_url'],
+                "category": p.get('category', 'other'),
+                "brand": p.get('brand', ''),
+                "source": p.get('source', '')
+            })
+    
+    return items
 
 
 @router.post("/generate", response_model=GenerationResult)
@@ -191,3 +254,139 @@ async def delete_design(design_id: str):
             return {"success": True, "message": "Design deleted"}
     
     raise HTTPException(status_code=404, detail="Design not found")
+
+
+@router.post("/redesign")
+async def redesign_product(
+    prompt: Optional[str] = Query(None, description="Custom design prompt (optional)"),
+    reference_url: Optional[str] = Query(None, description="Reference image URL"),
+    product_name: Optional[str] = Query(None, description="Product name for smart prompt"),
+    style_variation: str = Query("similar", description="Variation style: similar, bold, minimal, colorful")
+):
+    """
+    Generate a new design based on reference image using GrsAI API.
+    
+    Nano Banana is a world-understanding model that can intelligently 
+    create variations based on the original garment's theme, pattern, and style.
+    
+    If no custom prompt is provided, uses smart prompt generation based on product name.
+    """
+    import httpx
+    import json
+    
+    settings = get_settings()
+    api_key = settings.grsai_api_key
+    api_base = settings.grsai_api_base
+    model = settings.grsai_model
+    
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GrsAI API key not configured")
+    
+    # Smart prompt generation if no custom prompt
+    if not prompt:
+        if product_name:
+            # Style-specific variations
+            style_hints = {
+                "similar": "保持相似的整体风格，微调细节",
+                "bold": "更大胆的配色和图案",
+                "minimal": "更简约的设计风格",
+                "colorful": "更丰富的色彩搭配"
+            }
+            style_hint = style_hints.get(style_variation, "")
+            
+            prompt = f"""根据这件 {product_name} 的主题、印花和风格 pattern，
+生成一个同样版型但不同变体风格的童装设计。
+{style_hint}
+保持专业的产品图风格，白色背景，适合电商展示。"""
+        else:
+            prompt = """根据这件衣服的主题、印花和风格 pattern，
+生成一个同样版型但不同变体风格的设计。
+保持专业的产品图风格，白色背景，适合电商展示。"""
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "aspectRatio": "1:1"
+    }
+    
+    if reference_url:
+        payload["urls"] = [reference_url]
+    
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            async with client.stream(
+                "POST",
+                f"{api_base}/v1/draw/nano-banana",
+                headers=headers,
+                json=payload
+            ) as response:
+                if response.status_code != 200:
+                    error_text = await response.aread()
+                    raise HTTPException(status_code=response.status_code, detail=f"GrsAI API error: {error_text}")
+                
+                async for line in response.aiter_lines():
+                    if line and line.startswith('data: '):
+                        try:
+                            data = json.loads(line[6:])
+                            status = data.get("status", "").lower()
+                            
+                            if status == "succeeded":
+                                results = data.get("results", [])
+                                if results and results[0].get("url"):
+                                    return {
+                                        "success": True,
+                                        "image_url": results[0]["url"],
+                                        "prompt": prompt,
+                                        "style_variation": style_variation
+                                    }
+                            elif status == "failed":
+                                raise HTTPException(
+                                    status_code=500,
+                                    detail=f"Generation failed: {data.get('failure_reason', 'Unknown')}"
+                                )
+                        except json.JSONDecodeError:
+                            continue
+                
+                raise HTTPException(status_code=500, detail="No result received from GrsAI")
+                
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Generation timed out")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate-from-url")
+async def generate_from_url(
+    image_url: str = Query(..., description="Image URL to use as reference"),
+    prompt: Optional[str] = Query(None, description="Custom prompt"),
+    style: str = Query("similar", description="Style variation: similar, bold, minimal, colorful"),
+    count: int = Query(1, ge=1, le=4, description="Number of variations")
+):
+    """
+    Generate design variations directly from an image URL.
+    No need to have the product in our database.
+    """
+    results = []
+    
+    for i in range(count):
+        result = await redesign_product(
+            prompt=prompt,
+            reference_url=image_url,
+            style_variation=style
+        )
+        if result.get("success"):
+            results.append(result["image_url"])
+    
+    return {
+        "success": True,
+        "source_url": image_url,
+        "generated_images": results,
+        "count": len(results)
+    }

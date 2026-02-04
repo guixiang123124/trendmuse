@@ -36,22 +36,49 @@ export default function GeneratorPage() {
 
   const loadData = async () => {
     try {
-      // Load items and styles in parallel
-      const [itemsData, stylesData] = await Promise.all([
-        scanner.getItems({ limit: 20 }),
-        generator.getStyles(),
-      ]);
-      setItems(itemsData);
-      setStyles(stylesData);
-
-      // If no items, load demo data
-      if (itemsData.length === 0) {
-        await scanner.loadDemo();
-        const newItems = await scanner.getItems({ limit: 20 });
-        setItems(newItems);
+      // Try to load from database first
+      const dbRes = await fetch("http://localhost:8000/api/generator/items-from-db?limit=30");
+      if (dbRes.ok) {
+        const dbItems = await dbRes.json();
+        if (dbItems.length > 0) {
+          // Convert to FashionItem format
+          const fashionItems = dbItems.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price || 0,
+            currency: "USD",
+            image_url: item.image_url,
+            product_url: item.product_url || "",
+            category: item.category || "other",
+            brand: item.brand || item.source || "",
+            reviews_count: 0,
+            rating: 0,
+            sales_count: 0,
+            trend_score: 50,
+            trend_level: "stable",
+            colors: [],
+            tags: []
+          }));
+          setItems(fashionItems);
+        }
       }
+      
+      // Load styles
+      const stylesData = await generator.getStyles();
+      setStyles(stylesData);
     } catch (e) {
       console.error("Failed to load data:", e);
+      // Fallback to old method
+      try {
+        const [itemsData, stylesData] = await Promise.all([
+          scanner.getItems({ limit: 20 }),
+          generator.getStyles(),
+        ]);
+        setItems(itemsData);
+        setStyles(stylesData);
+      } catch (e2) {
+        console.error("Fallback also failed:", e2);
+      }
     }
   };
 

@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # API Keys (optional - demo mode without them)
     replicate_api_token: str | None = None
     
+    # GrsAI API (Nano Banana image generation)
+    grsai_api_key: str | None = None
+    grsai_api_base: str = "https://api.grsai.com"
+    grsai_model: str = "nano-banana-fast"  # or "nano-banana-pro"
+    
     # Scraping settings
     scrape_timeout: int = 30000  # ms
     max_items_per_scan: int = 50
@@ -44,7 +49,7 @@ class Settings(BaseSettings):
         self.generated_dir.mkdir(parents=True, exist_ok=True)
         
         # Auto-detect demo mode
-        if self.replicate_api_token:
+        if self.replicate_api_token or self.grsai_api_key:
             self.demo_mode = False
 
 
