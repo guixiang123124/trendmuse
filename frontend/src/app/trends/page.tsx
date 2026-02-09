@@ -27,7 +27,7 @@ export default function TrendsPage() {
 
   const loadData = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/trends/summary");
+      const res = await fetch("/api/trends/summary");
       if (res.ok) {
         setSummary(await res.json());
       }

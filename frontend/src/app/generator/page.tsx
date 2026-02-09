@@ -37,7 +37,7 @@ export default function GeneratorPage() {
   const loadData = async () => {
     try {
       // Try to load from database first
-      const dbRes = await fetch("http://localhost:8000/api/generator/items-from-db?limit=30");
+      const dbRes = await fetch("/api/generator/items-from-db?limit=30");
       if (dbRes.ok) {
         const dbItems = await dbRes.json();
         if (dbItems.length > 0) {

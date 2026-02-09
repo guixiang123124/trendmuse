@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 import time
 
 from src.core.config import get_settings
-from src.api.routes import scanner, generator, converter, trends
+from src.api.routes import scanner, generator, converter, trends, discovery
 from src.models.schemas import HealthResponse
 
 
@@ -79,6 +79,7 @@ app.include_router(scanner.router, prefix="/api")
 app.include_router(generator.router, prefix="/api")
 app.include_router(converter.router, prefix="/api")
 app.include_router(trends.router, prefix="/api")
+app.include_router(discovery.router, prefix="/api")
 
 
 # Health check endpoint

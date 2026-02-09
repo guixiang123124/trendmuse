@@ -1,27 +1,39 @@
-# TrendMuse 🎨
+# TrendMuse 2.0 🎨🔥
 
-**Fashion Design AI Agent** - Analyze trends, generate designs, convert to sketches.
+**AI-Powered Fashion Intelligence Platform** — Discover trends, generate designs, and stay ahead of the fashion curve.
 
-## Features
+## What's New in 2.0
 
-- 🔍 **Trend Scanner** - Scrape fashion e-commerce sites for trending styles
-- ✨ **Design Generator** - Create AI-powered design variations
-- ✏️ **Sketch Converter** - Transform photos into fashion sketches
+### 🌐 AI Trend Discovery Engine (NEW)
+- **Multi-source trend aggregation**: Google Trends, Amazon Best Sellers, fashion blogs, social media
+- **Trend scoring**: Confidence scores and trend direction (hot/rising/stable/declining)
+- **Trending categories**: Aesthetics, colors, silhouettes, materials with real-time data
+- **Search**: Find any trend across all data sources
+
+### 🎨 Enhanced Design Generation
+- **GrsAI Nano Banana** integration for AI image generation
+- **Trend-informed prompts**: Generate designs based on what's actually trending
+- **Multi-style variations**: Redesign any product in different styles
+- **Upload & generate**: Use any image as a reference
+
+### 📊 Fashion Intelligence Dashboard
+- Real-time trend overview with hot trends and trending colors
+- Product database from multiple e-commerce sources
+- Category analytics and price distribution
+- Brand comparison views
 
 ## Quick Start
 
 ### Backend
-
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+source venv/bin/activate
 pip install -r requirements.txt
 uvicorn src.api.main:app --reload --port 8000
 ```
 
 ### Frontend
-
 ```bash
 cd frontend
 npm install
@@ -32,34 +44,55 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Tech Stack
 
-- **Backend**: Python/FastAPI, Playwright, SQLite
-- **Frontend**: Next.js 14, React, Tailwind CSS, shadcn/ui
-- **AI**: Replicate API (prepared, uses demo mode by default)
+- **Backend**: Python/FastAPI, SQLite, Playwright (scraping)
+- **Frontend**: Next.js 14, React, Tailwind CSS, Lucide Icons
+- **AI**: GrsAI Nano Banana API (image generation)
+- **Data**: Google Trends, Amazon, Fashion e-commerce scrapers
 
 ## API Endpoints
 
+### Trend Discovery (NEW)
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/scanner/scan` | POST | Scan a website for fashion items |
-| `/api/scanner/items` | GET | Get scanned items |
-| `/api/generator/generate` | POST | Generate design variations |
-| `/api/converter/convert` | POST | Convert image to sketch |
+| `/api/discovery/trends` | GET | Fashion trend categories with scores |
+| `/api/discovery/google-trends` | GET | Google Trends fashion keywords |
+| `/api/discovery/amazon-trending` | GET | Amazon Best Sellers fashion |
+| `/api/discovery/dashboard` | GET | Aggregated trend dashboard |
+| `/api/discovery/search` | GET | Search across all trends |
+
+### Scanner & Analytics
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/scanner/scan` | POST | Scrape a fashion website |
+| `/api/trends/summary` | GET | Database stats & analytics |
+| `/api/trends/analytics` | GET | Deep trend analytics |
+
+### Design Generation
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/generator/redesign` | POST | AI design generation (GrsAI) |
+| `/api/generator/generate-from-url` | POST | Generate from any image URL |
 
 ## Environment Variables
 
 ```bash
 # backend/.env
-REPLICATE_API_TOKEN=your_token_here  # Optional, uses demo mode without it
+GRSAI_API_KEY=your_key_here        # For AI image generation
+REPLICATE_API_TOKEN=your_token     # Alternative AI provider
 ```
 
-## Demo Mode
+## Deployment
 
-The app runs in demo mode by default, using sample fashion data and placeholder generations. To enable real AI:
+### Frontend → Vercel
+```bash
+cd frontend && npx vercel
+```
+Set `NEXT_PUBLIC_API_URL` to your backend URL.
 
-1. Get a Replicate API token
-2. Set `REPLICATE_API_TOKEN` in backend/.env
-3. Uncomment the API integration code in `services/image_gen.py`
+### Backend → Railway
+```bash
+cd backend && railway up
+```
 
 ## License
-
 MIT

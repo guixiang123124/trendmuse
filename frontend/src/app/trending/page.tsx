@@ -37,7 +37,7 @@ export default function TrendingPage() {
   const loadTrendingProducts = async () => {
     try {
       // 从后端获取按品牌分组的产品
-      const res = await fetch("http://localhost:8000/api/trends/products-by-brand?items_per_brand=10");
+      const res = await fetch("/api/trends/products-by-brand?items_per_brand=10");
       if (res.ok) {
         const data = await res.json();
         setBrandData(data.brands || {});
@@ -48,7 +48,7 @@ export default function TrendingPage() {
       console.error("Error loading products:", error);
       // Fallback to old API
       try {
-        const res = await fetch("http://localhost:8000/api/trends/products?limit=100");
+        const res = await fetch("/api/trends/products?limit=100");
         if (res.ok) {
           const data = await res.json();
           // Group by source manually
@@ -88,7 +88,7 @@ export default function TrendingPage() {
         ...(product.image_url && { reference_url: product.image_url })
       });
       
-      const res = await fetch(`http://localhost:8000/api/generator/redesign?${params}`, {
+      const res = await fetch(`/api/generator/redesign?${params}`, {
         method: "POST"
       });
       
@@ -130,7 +130,7 @@ export default function TrendingPage() {
         style_variation: "similar"
       });
       
-      const res = await fetch(`http://localhost:8000/api/generator/redesign?${params}`, {
+      const res = await fetch(`/api/generator/redesign?${params}`, {
         method: "POST"
       });
       
