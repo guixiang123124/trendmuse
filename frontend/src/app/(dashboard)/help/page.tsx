@@ -134,8 +134,8 @@ export default function HelpPage() {
         <div className="mt-6 p-4 rounded-xl bg-muted text-center">
           <p className="text-sm text-muted-foreground">
             Backend API documentation available at{" "}
-            <a href="http://localhost:8000/docs" target="_blank" rel="noopener" className="text-primary hover:underline">
-              localhost:8000/docs
+            <a href="/api" target="_blank" rel="noopener" className="text-primary hover:underline">
+              API Documentation (/docs)
             </a>
           </p>
         </div>

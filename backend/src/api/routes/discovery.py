@@ -14,6 +14,74 @@ import aiohttp
 
 router = APIRouter(prefix="/discovery", tags=["Trend Discovery"])
 
+# DB path for trend pipeline data
+import sqlite3
+from pathlib import Path
+_DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "trendmuse.db"
+
+
+@router.get("/trend-signals")
+async def get_trend_signals(
+    source: Optional[str] = Query(None, description="Filter by source (exa, scrapling, twitter)"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+):
+    """Return trend_signals from the pipeline DB."""
+    conn = sqlite3.connect(str(_DB_PATH))
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    query = "SELECT * FROM trend_signals WHERE 1=1"
+    params: list = []
+    if source:
+        query += " AND source = ?"
+        params.append(source)
+    if category:
+        query += " AND category = ?"
+        params.append(category)
+    query += " ORDER BY discovered_at DESC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+    
+    try:
+        rows = c.execute(query, params).fetchall()
+        total = c.execute(
+            "SELECT COUNT(*) FROM trend_signals" + (" WHERE source = ?" if source else ""),
+            [source] if source else []
+        ).fetchone()[0]
+        signals = [dict(r) for r in rows]
+    except Exception as e:
+        conn.close()
+        return {"error": str(e), "signals": [], "total": 0}
+    
+    conn.close()
+    return {"total": total, "limit": limit, "offset": offset, "signals": signals}
+
+
+@router.get("/pipeline-status")
+async def get_pipeline_status():
+    """Show last pipeline run time and signal counts by source."""
+    conn = sqlite3.connect(str(_DB_PATH))
+    c = conn.cursor()
+    try:
+        by_source = c.execute(
+            "SELECT source, COUNT(*) as cnt FROM trend_signals GROUP BY source"
+        ).fetchall()
+        last_run = c.execute(
+            "SELECT MAX(discovered_at) FROM trend_signals"
+        ).fetchone()[0]
+        total = c.execute("SELECT COUNT(*) FROM trend_signals").fetchone()[0]
+    except Exception:
+        conn.close()
+        return {"status": "no_data", "last_run": None, "total": 0, "by_source": {}}
+    conn.close()
+    return {
+        "status": "ok",
+        "last_run": last_run,
+        "total": total,
+        "by_source": {row[0]: row[1] for row in by_source},
+    }
+
 # ============================================================
 # Google Trends (via unofficial API / pytrends-style requests)
 # ============================================================
@@ -339,6 +407,39 @@ async def get_trend_dashboard():
         "trend_velocity": sorted(velocity_items, key=lambda x: x["score"], reverse=True)[:10],
         "color_palette": FASHION_CATEGORIES.get("Trending Colors", []),
     }
+
+
+@router.get("/exa-trends")
+async def get_exa_trends(refresh: bool = False):
+    """
+    Get real-time fashion trends from Exa semantic search.
+    
+    Uses Exa API (via mcporter) to discover trending fashion items,
+    viral products, and emerging styles from across the web.
+    """
+    try:
+        from src.services.exa_trends import get_cached_trends
+        return get_cached_trends(force_refresh=refresh)
+    except Exception as e:
+        return {
+            "source": "Exa Semantic Search",
+            "error": str(e),
+            "trends": [],
+            "total_trends": 0,
+        }
+
+
+@router.get("/exa-brands")
+async def get_exa_brands():
+    """
+    Discover trending Shopify fashion brands via Exa.
+    """
+    try:
+        from src.services.exa_trends import fetch_shopify_brands
+        brands = fetch_shopify_brands()
+        return {"brands": brands, "total": len(brands)}
+    except Exception as e:
+        return {"brands": [], "total": 0, "error": str(e)}
 
 
 @router.get("/search")

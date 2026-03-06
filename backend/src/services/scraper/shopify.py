@@ -7,6 +7,7 @@ Supports: Classic Whimsy, Jamie Kay, Shrimp and Grits Kids, etc.
 import uuid
 import aiohttp
 from datetime import datetime
+from pathlib import Path
 from typing import List, Optional, Dict, Any
 from urllib.parse import urlparse, urljoin
 
@@ -398,6 +399,108 @@ class ShopifyScraper(BaseScraper):
         except Exception as e:
             print(f"[ShopifyScraper] Image download error: {e}")
         return False
+
+
+class ShopifyScraplingFallback:
+    """
+    Fallback scraper using Scrapling for Shopify stores that block the JSON API.
+    Scrapling can bypass Cloudflare and other bot protection.
+    
+    Requires: pip install scrapling (or use ~/.agent-reach-venv/)
+    """
+    
+    @staticmethod
+    async def scrape_html(url: str, max_items: int = 50) -> List[FashionItem]:
+        """Scrape products from Shopify store HTML using Scrapling."""
+        import asyncio
+        import subprocess
+        import json
+        
+        # Run scrapling in the agent-reach-venv where it's installed
+        script = f'''
+import sys
+sys.path.insert(0, ".")
+import json
+from scrapling import Fetcher
+
+fetcher = Fetcher(auto_match=True)
+page = fetcher.get("{url}")
+
+products = []
+# Shopify stores typically render products in collection grids
+for card in page.css(".product-card, .grid__item, [data-product-card], .collection-product-card")[:{max_items}]:
+    title_el = card.css_first("a.product-card__title, .product-card__name, h3 a, .grid-product__title, .product-title")
+    price_el = card.css_first(".price, .product-price, .money, [data-product-price]")
+    img_el = card.css_first("img")
+    link_el = card.css_first("a[href*='/products/']")
+    
+    if title_el:
+        product = {{
+            "name": title_el.text.strip(),
+            "price": price_el.text.strip() if price_el else "0",
+            "image_url": img_el.attrib.get("src", "") if img_el else "",
+            "product_url": link_el.attrib.get("href", "") if link_el else "",
+        }}
+        products.append(product)
+
+print(json.dumps(products))
+'''
+        
+        try:
+            venv_python = str(Path.home() / ".agent-reach-venv/bin/python")
+            result = subprocess.run(
+                [venv_python, "-c", script],
+                capture_output=True, text=True, timeout=60,
+            )
+            
+            if result.returncode != 0:
+                print(f"[ShopifyScrapling] Error: {result.stderr[:300]}")
+                return []
+            
+            raw_products = json.loads(result.stdout)
+            items = []
+            
+            parsed_url = urlparse(url)
+            base = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            
+            for p in raw_products[:max_items]:
+                price_str = p.get("price", "0").replace("$", "").replace(",", "").strip()
+                try:
+                    price = float(price_str.split()[0])
+                except (ValueError, IndexError):
+                    price = 0.0
+                
+                product_url = p.get("product_url", "")
+                if product_url and not product_url.startswith("http"):
+                    product_url = base + product_url
+                
+                image_url = p.get("image_url", "")
+                if image_url and image_url.startswith("//"):
+                    image_url = "https:" + image_url
+                
+                items.append(FashionItem(
+                    id=str(uuid.uuid4()),
+                    name=p.get("name", "Unknown"),
+                    brand=parsed_url.netloc.replace("www.", "").split(".")[0].title(),
+                    price=price,
+                    currency="USD",
+                    category=FashionCategory.DRESS,
+                    colors=[],
+                    tags=[],
+                    image_url=image_url,
+                    product_url=product_url,
+                    rating=0.0,
+                    reviews_count=0,
+                    sales_count=0,
+                    scraped_at=datetime.now()
+                ))
+            
+            print(f"[ShopifyScrapling] Found {len(items)} items via HTML fallback")
+            return items
+            
+        except Exception as e:
+            print(f"[ShopifyScrapling] Exception: {e}")
+            return []
 
 
 # Convenience function to check if a URL is a Shopify store

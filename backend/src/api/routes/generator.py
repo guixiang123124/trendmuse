@@ -5,7 +5,8 @@ Endpoints for generating design variations using AI.
 """
 import time
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 from src.models.schemas import (
@@ -19,9 +20,79 @@ from src.models.schemas import (
 )
 from src.services.image_gen import ImageGenerationService
 from src.services.database import get_database
+from src.services.design_gen import generate_designs, get_credit_cost
+from src.auth.router import get_current_user
+from src.auth.models import deduct_credits
 from src.core.config import get_settings
 
 router = APIRouter(prefix="/generator", tags=["Generator"])
+
+
+# ── Trend → Design Generation ──
+
+class FromTrendRequest(BaseModel):
+    signal_id: int
+    style: str = Field(default="variation", pattern="^(variation|inspired|remix)$")
+    model: str = Field(default="nano-banana", pattern="^(nano-banana|seedream-4\\.5|seedream-5\\.0-lite)$")
+    count: int = Field(default=1, ge=1, le=4)
+
+
+@router.post("/generate/from-trend")
+async def generate_from_trend(
+    req: FromTrendRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Generate AI designs inspired by a trend signal. Requires JWT auth."""
+    import sqlite3
+    from pathlib import Path
+
+    # 1. Fetch trend signal from DB
+    db_path = Path(__file__).parent.parent.parent.parent / "data" / "trendmuse.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    row = conn.execute("SELECT * FROM trend_signals WHERE id = ?", (req.signal_id,)).fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Trend signal not found")
+
+    signal = dict(row)
+    title = signal.get("title", "")
+    description = signal.get("content", "") or signal.get("description", "")
+    image_url = signal.get("image_url")
+    category = signal.get("category", "")
+
+    # 2. Check credits
+    total_cost = get_credit_cost(req.model, req.count)
+    if user["credits_remaining"] < total_cost:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Insufficient credits: need {total_cost}, have {user['credits_remaining']}",
+        )
+
+    # 3. Generate
+    images = await generate_designs(
+        title=title,
+        description=description,
+        image_url=image_url,
+        category=category,
+        style=req.style,
+        model=req.model,
+        count=req.count,
+    )
+
+    if not images:
+        raise HTTPException(status_code=500, detail="Generation failed — no images returned")
+
+    # 4. Deduct credits (only for successfully generated images)
+    actual_cost = get_credit_cost(req.model, len(images))
+    remaining = deduct_credits(user["id"], actual_cost)
+
+    return {
+        "images": images,
+        "credits_remaining": remaining,
+        "model": req.model,
+        "style": req.style,
+    }
 
 # In-memory storage for demo
 _generated_designs: List[GeneratedDesign] = []

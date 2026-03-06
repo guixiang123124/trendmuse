@@ -1,315 +1,286 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  TrendingUp, 
-  Sparkles, 
-  PenTool, 
-  ArrowRight,
-  Zap,
-  BarChart3,
-  Flame,
-  Eye,
-  Globe,
-  Palette,
-  Search
-} from "lucide-react";
 import Link from "next/link";
+import { Zap, TrendingUp, Sparkles, Download, ShoppingBag, Twitter, Globe, BookOpen, Check, ArrowRight } from "lucide-react";
 
-interface DashboardData {
-  summary: {
-    total_trends_tracked: number;
-    hot_trends: number;
-    rising_trends: number;
-    data_sources: string[];
-  };
-  hot_trends: Array<{
-    name: string;
-    score: number;
-    direction: string;
-    description?: string;
-    source_category: string;
-  }>;
-  trending_products: Array<{
-    rank: number;
-    name: string;
-    price: number;
-    rating: number;
-    reviews: number;
-    image_url: string;
-    trend_score: number;
-    tags: string[];
-    colors: string[];
-    category: string;
-  }>;
-  color_palette: Array<{
-    name: string;
-    score: number;
-    direction: string;
-    hex?: string;
-    description?: string;
-  }>;
-}
+const steps = [
+  { icon: TrendingUp, title: "Discover Trends", desc: "AI scans Shopify stores, Twitter/X, fashion blogs & Google Trends in real-time" },
+  { icon: Sparkles, title: "AI Generates Designs", desc: "Turn trending insights into production-ready fashion designs instantly" },
+  { icon: Download, title: "Export & Sell", desc: "Download designs, tech packs, and sketches ready for manufacturing" },
+];
 
-interface DbStats {
-  overview?: {
-    total_products: number;
-    total_sources: number;
-    total_categories: number;
-  };
-}
+const sources = [
+  { icon: ShoppingBag, name: "Shopify Stores", count: "33 stores" },
+  { icon: Twitter, name: "Twitter / X", count: "Real-time" },
+  { icon: BookOpen, name: "Fashion Blogs", count: "50+ sources" },
+  { icon: Globe, name: "Google Trends", count: "Global data" },
+];
 
-export default function Dashboard() {
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [dbStats, setDbStats] = useState<DbStats | null>(null);
-  const [loading, setLoading] = useState(true);
+const stats = [
+  { value: "1,100+", label: "Products Tracked" },
+  { value: "33", label: "Stores Monitored" },
+  { value: "6", label: "Categories" },
+  { value: "24/7", label: "Live Scanning" },
+];
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/discovery/dashboard").then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch("/api/trends/summary").then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([dash, stats]) => {
-      setDashboard(dash);
-      setDbStats(stats);
-      setLoading(false);
-    });
-  }, []);
+const plans = [
+  {
+    name: "Free",
+    price: "$0",
+    period: "forever",
+    features: ["5 searches / day", "10 AI designs / month", "Basic trend data", "1 data source"],
+    cta: "Get Started Free",
+    href: "/register",
+    highlight: false,
+  },
+  {
+    name: "Starter",
+    price: "$19",
+    period: "/ month",
+    features: ["50 searches / day", "100 AI designs / month", "All data sources", "Export to PNG & SVG", "Trend alerts"],
+    cta: "Start Free Trial",
+    href: "/register",
+    highlight: true,
+  },
+  {
+    name: "Pro",
+    price: "$49",
+    period: "/ month",
+    features: ["Unlimited searches", "Unlimited AI designs", "All data sources", "API access", "Priority support", "Custom trend reports"],
+    cta: "Start Free Trial",
+    href: "/register",
+    highlight: false,
+  },
+];
 
-  const features = [
-    {
-      title: "Trend Discovery",
-      description: "AI-powered trend intelligence from Google Trends, Amazon, and fashion data sources",
-      icon: Globe,
-      href: "/discovery",
-      gradient: "from-emerald-500 to-teal-500",
-      badge: "NEW",
-    },
-    {
-      title: "Trending Products",
-      description: "Browse scraped products by brand and generate AI design variations",
-      icon: Flame,
-      href: "/trending",
-      gradient: "from-orange-500 to-red-500",
-    },
-    {
-      title: "Design Generator",
-      description: "Create AI-powered design variations using GrsAI Nano Banana",
-      icon: Sparkles,
-      href: "/generator",
-      gradient: "from-purple-500 to-violet-500",
-    },
-    {
-      title: "Trend Scanner",
-      description: "Scrape fashion e-commerce sites to build your product database",
-      icon: Search,
-      href: "/scanner",
-      gradient: "from-pink-500 to-rose-500",
-    },
-  ];
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen p-8">
-      {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-3 rounded-xl bg-gradient-fashion">
-            <Zap className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Nav */}
+      <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+              <Zap className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-lg font-bold">TrendMuse</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/discovery" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
+              Trends
+            </Link>
+            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Get Started
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="pt-32 pb-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-medium mb-6">
+            <Sparkles className="h-3 w-3" /> AI-Powered Fashion Intelligence
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6">
+            Stop Guessing What&apos;s Trending.{" "}
+            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+              Start Designing What Sells.
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+            TrendMuse scans thousands of products, social signals, and fashion data sources to surface what&apos;s trending — then generates AI designs you can sell.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/register"
+              className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-base hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            >
+              Get Started Free <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/discovery"
+              className="px-8 py-3.5 rounded-xl border border-border text-foreground font-semibold text-base hover:bg-muted transition-colors flex items-center justify-center gap-2"
+            >
+              View Trends <TrendingUp className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-12 px-6 border-y border-border/50">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                {s.value}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">How It Works</h2>
+          <p className="text-muted-foreground text-center mb-14 max-w-xl mx-auto">
+            From trend discovery to sellable designs in three simple steps.
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((step, i) => (
+              <div key={step.title} className="relative p-6 rounded-2xl bg-card border border-border hover:border-purple-500/30 transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                    <step.icon className="h-5 w-5 text-purple-400" />
+                  </div>
+                  <span className="text-xs font-bold text-muted-foreground">STEP {i + 1}</span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Data Sources */}
+      <section className="py-20 px-6 bg-card/50">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Powered by Real Data</h2>
+          <p className="text-muted-foreground text-center mb-14 max-w-xl mx-auto">
+            We aggregate signals from the platforms that matter most in fashion.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {sources.map((src) => (
+              <div key={src.name} className="p-6 rounded-2xl bg-background border border-border text-center hover:border-purple-500/30 transition-colors">
+                <div className="inline-flex p-3 rounded-xl bg-purple-500/10 mb-4">
+                  <src.icon className="h-6 w-6 text-purple-400" />
+                </div>
+                <h3 className="font-semibold text-sm mb-1">{src.name}</h3>
+                <p className="text-xs text-muted-foreground">{src.count}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Simple Pricing</h2>
+          <p className="text-muted-foreground text-center mb-14 max-w-xl mx-auto">
+            Start free. Upgrade when you&apos;re ready.
+          </p>
+          <div className="grid md:grid-cols-3 gap-6">
+            {plans.map((plan) => (
+              <div
+                key={plan.name}
+                className={`p-6 rounded-2xl border ${
+                  plan.highlight
+                    ? "border-purple-500 bg-purple-500/5 ring-1 ring-purple-500/20"
+                    : "border-border bg-card"
+                } relative`}
+              >
+                {plan.highlight && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                    Most Popular
+                  </span>
+                )}
+                <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-sm text-muted-foreground">{plan.period}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={plan.href}
+                  className={`block text-center py-2.5 rounded-xl font-medium text-sm transition-colors ${
+                    plan.highlight
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
+                      : "bg-muted text-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-6 bg-card/50">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to discover what&apos;s{" "}
+            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">next in fashion</span>?
+          </h2>
+          <p className="text-muted-foreground mb-8">Join designers using AI to stay ahead of every trend.</p>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity"
+          >
+            Get Started Free <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border py-12 px-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+                <Zap className="h-3.5 w-3.5 text-white" />
+              </div>
+              <span className="font-bold">TrendMuse</span>
+            </div>
+            <p className="text-xs text-muted-foreground">AI-powered fashion trend intelligence and design generation.</p>
           </div>
           <div>
-            <h1 className="text-4xl font-bold gradient-text">TrendMuse 2.0</h1>
-            <p className="text-muted-foreground">AI-Powered Fashion Intelligence Platform</p>
-          </div>
-        </div>
-        <p className="text-lg text-muted-foreground max-w-2xl">
-          Discover what&apos;s trending, generate designs informed by real market data, and stay ahead of the fashion curve.
-        </p>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <div className="p-5 rounded-2xl bg-card border border-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/20">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{dashboard?.summary?.total_trends_tracked || 0}</p>
-              <p className="text-xs text-muted-foreground">Trends Tracked</p>
+            <h4 className="text-sm font-semibold mb-3">Product</h4>
+            <div className="space-y-2">
+              <Link href="/discovery" className="block text-sm text-muted-foreground hover:text-foreground">Trend Discovery</Link>
+              <Link href="/dashboard" className="block text-sm text-muted-foreground hover:text-foreground">Dashboard</Link>
+              <Link href="/generator" className="block text-sm text-muted-foreground hover:text-foreground">Design Generator</Link>
+              <Link href="/scanner" className="block text-sm text-muted-foreground hover:text-foreground">Trend Scanner</Link>
             </div>
           </div>
-        </div>
-        <div className="p-5 rounded-2xl bg-card border border-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-red-500/20">
-              <Flame className="h-5 w-5 text-red-500" />
+          <div>
+            <h4 className="text-sm font-semibold mb-3">Resources</h4>
+            <div className="space-y-2">
+              <Link href="/help" className="block text-sm text-muted-foreground hover:text-foreground">Help Center</Link>
+              <Link href="/settings" className="block text-sm text-muted-foreground hover:text-foreground">Settings</Link>
             </div>
-            <div>
-              <p className="text-2xl font-bold">{dashboard?.summary?.hot_trends || 0}</p>
-              <p className="text-xs text-muted-foreground">Hot Right Now</p>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold mb-3">Account</h4>
+            <div className="space-y-2">
+              <Link href="/login" className="block text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
+              <Link href="/register" className="block text-sm text-muted-foreground hover:text-foreground">Create Account</Link>
             </div>
           </div>
         </div>
-        <div className="p-5 rounded-2xl bg-card border border-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-500/20">
-              <BarChart3 className="h-5 w-5 text-purple-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{dbStats?.overview?.total_products?.toLocaleString() || 0}</p>
-              <p className="text-xs text-muted-foreground">Products Scraped</p>
-            </div>
-          </div>
+        <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-border text-center">
+          <p className="text-xs text-muted-foreground">© 2025 TrendMuse. All rights reserved.</p>
         </div>
-        <div className="p-5 rounded-2xl bg-card border border-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/20">
-              <Globe className="h-5 w-5 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{dashboard?.summary?.data_sources?.length || 4}</p>
-              <p className="text-xs text-muted-foreground">Data Sources</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Hot Trends + Color Palette */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-        {/* Hot Trends */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-card border border-border">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Flame className="h-5 w-5 text-orange-500" />
-              Hot Trends Right Now
-            </h2>
-            <Link href="/discovery" className="text-sm text-primary hover:underline flex items-center gap-1">
-              View All <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {(dashboard?.hot_trends || []).slice(0, 6).map((trend, i) => (
-              <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center">
-                  <span className="text-sm font-bold text-orange-500">#{i + 1}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{trend.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{trend.description}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    trend.direction === 'hot' ? 'bg-red-500/20 text-red-400' :
-                    trend.direction === 'rising' ? 'bg-emerald-500/20 text-emerald-400' :
-                    'bg-blue-500/20 text-blue-400'
-                  }`}>
-                    {trend.direction === 'hot' ? '🔥 Hot' : trend.direction === 'rising' ? '📈 Rising' : '→ Stable'}
-                  </span>
-                  <span className="text-sm font-bold text-primary">{trend.score}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Color Palette */}
-        <div className="p-6 rounded-2xl bg-card border border-border">
-          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-            <Palette className="h-5 w-5 text-purple-500" />
-            Trending Colors
-          </h2>
-          <div className="space-y-3">
-            {(dashboard?.color_palette || []).map((color, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div 
-                  className="w-8 h-8 rounded-lg border border-border flex-shrink-0"
-                  style={{ backgroundColor: color.hex || '#888' }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{color.name}</p>
-                  <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-                    <div 
-                      className="bg-primary rounded-full h-1.5 transition-all"
-                      style={{ width: `${color.score}%` }}
-                    />
-                  </div>
-                </div>
-                <span className="text-xs text-muted-foreground">{color.score}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Feature Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-        {features.map((feature) => (
-          <Link
-            key={feature.title}
-            href={feature.href}
-            className="group p-5 rounded-2xl bg-card border border-border card-hover relative"
-          >
-            {feature.badge && (
-              <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                {feature.badge}
-              </span>
-            )}
-            <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${feature.gradient} mb-3`}>
-              <feature.icon className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-base font-semibold mb-1 group-hover:text-primary transition-colors">
-              {feature.title}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              {feature.description}
-            </p>
-            <div className="flex items-center text-primary gap-1.5">
-              <span className="text-xs font-medium">Explore</span>
-              <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Trending Products Preview */}
-      {dashboard?.trending_products && dashboard.trending_products.length > 0 && (
-        <div className="p-6 rounded-2xl bg-card border border-border">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              Top Trending Products
-            </h2>
-            <Link href="/discovery" className="text-sm text-primary hover:underline flex items-center gap-1">
-              See More <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {dashboard.trending_products.slice(0, 6).map((product, i) => (
-              <div key={i} className="rounded-xl overflow-hidden border border-border bg-muted/30">
-                <div className="aspect-square relative bg-muted">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                  <span className="absolute top-2 left-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/90 text-white">
-                    #{product.rank}
-                  </span>
-                </div>
-                <div className="p-2.5">
-                  <p className="text-xs font-medium truncate">{product.name}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-primary font-bold">${product.price}</span>
-                    <span className="text-[10px] text-muted-foreground">⭐ {product.rating}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      </footer>
     </div>
   );
 }

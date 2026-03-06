@@ -13,12 +13,15 @@ import time
 from src.core.config import get_settings
 from src.api.routes import scanner, generator, converter, trends, discovery
 from src.models.schemas import HealthResponse
+from src.auth.router import router as auth_router
+from src.auth.models import init_db as init_auth_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler"""
     # Startup
+    init_auth_db()
     settings = get_settings()
     print(f"🎨 TrendMuse starting...")
     print(f"   Demo mode: {settings.demo_mode}")
@@ -80,6 +83,7 @@ app.include_router(generator.router, prefix="/api")
 app.include_router(converter.router, prefix="/api")
 app.include_router(trends.router, prefix="/api")
 app.include_router(discovery.router, prefix="/api")
+app.include_router(auth_router)
 
 
 # Health check endpoint
