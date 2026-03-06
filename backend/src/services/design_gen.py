@@ -12,6 +12,12 @@ from typing import List, Optional, Dict, Any
 
 import aiohttp
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # ── Config ──
 GRSAI_API_KEY = os.getenv("GRSAI_API_KEY", "")
 GRSAI_API_BASE = os.getenv("GRSAI_API_BASE", "https://api.grsai.com")
