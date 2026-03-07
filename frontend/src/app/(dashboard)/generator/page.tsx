@@ -59,7 +59,7 @@ export default function GeneratorPage() {
             colors: [],
             tags: []
           }));
-          setItems(fashionItems);
+          setItems(fashionItems.filter((item: any) => item.image_url && item.image_url.startsWith('http')));
         }
       }
       
@@ -289,10 +289,10 @@ export default function GeneratorPage() {
             )}
           </div>
 
-          {/* Demo Notice */}
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <p className="text-xs text-amber-500">
-              <strong>Demo Mode:</strong> Using placeholder images. Add Replicate API key for real AI generation.
+          {/* AI Engine Notice */}
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <p className="text-xs text-emerald-500">
+              <strong>✨ AI Powered:</strong> Design generation powered by GrsAI Nano Banana engine.
             </p>
           </div>
         </div>

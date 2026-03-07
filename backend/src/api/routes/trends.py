@@ -280,7 +280,9 @@ async def get_products_grouped_by_brand(
     
     result = {}
     for source in sources:
-        products = db.get_products(source=source, limit=items_per_brand)
+        products = db.get_products(source=source, limit=items_per_brand * 2)
+        # Filter out products without valid images
+        products = [p for p in products if p.get('image_url') and p['image_url'].startswith('http')][:items_per_brand]
         if products:
             result[source] = {
                 "brand_name": source.replace('.com', '').replace('www.', '').title(),

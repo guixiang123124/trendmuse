@@ -40,7 +40,15 @@ export default function TrendingPage() {
       const res = await fetch("/api/trends/products-by-brand?items_per_brand=10");
       if (res.ok) {
         const data = await res.json();
-        setBrandData(data.brands || {});
+        // Filter out products without images
+        const brands = data.brands || {};
+        for (const key of Object.keys(brands)) {
+          brands[key].products = brands[key].products.filter(
+            (p: Product) => p.image_url && p.image_url.startsWith('http')
+          );
+          if (brands[key].products.length === 0) delete brands[key];
+        }
+        setBrandData(brands);
       } else {
         throw new Error("API error");
       }
@@ -53,7 +61,7 @@ export default function TrendingPage() {
           const data = await res.json();
           // Group by source manually
           const grouped: Record<string, BrandGroup> = {};
-          for (const p of data.products || []) {
+          for (const p of (data.products || []).filter((p: Product) => p.image_url && p.image_url.startsWith('http'))) {
             const source = p.source || 'unknown';
             if (!grouped[source]) {
               grouped[source] = {
