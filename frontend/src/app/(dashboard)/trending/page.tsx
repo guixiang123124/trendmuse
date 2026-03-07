@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useState, useEffect, useRef } from "react";
 
@@ -37,7 +38,7 @@ export default function TrendingPage() {
   const loadTrendingProducts = async () => {
     try {
       // 从后端获取按品牌分组的产品
-      const res = await fetch("/api/trends/products-by-brand?items_per_brand=10");
+      const res = await fetch(apiUrl("/api/trends/products-by-brand?items_per_brand=10"));
       if (res.ok) {
         const data = await res.json();
         // Filter out products without images
@@ -56,7 +57,7 @@ export default function TrendingPage() {
       console.error("Error loading products:", error);
       // Fallback to old API
       try {
-        const res = await fetch("/api/trends/products?limit=100");
+        const res = await fetch(apiUrl("/api/trends/products?limit=100"));
         if (res.ok) {
           const data = await res.json();
           // Group by source manually

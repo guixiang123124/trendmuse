@@ -2,7 +2,16 @@
  * TrendMuse API Client
  */
 
-const API_BASE = "/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : "/api";
+
+export function apiUrl(path: string): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return `${process.env.NEXT_PUBLIC_API_URL}${path}`;
+  }
+  return path;
+}
 
 // Types
 export interface FashionItem {

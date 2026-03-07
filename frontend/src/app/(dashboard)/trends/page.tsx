@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useState, useEffect } from "react";
 
@@ -28,12 +29,12 @@ export default function TrendsPage() {
   const loadData = async () => {
     try {
       // Try trends/summary first (products table)
-      const res = await fetch("/api/trends/summary");
+      const res = await fetch(apiUrl("/api/trends/summary"));
       if (res.ok) {
         const data = await res.json();
         // If products table is empty, supplement with pipeline data
         if (!data.overview?.total_products || data.overview.total_products === 0) {
-          const pipelineRes = await fetch("/api/discovery/pipeline-status");
+          const pipelineRes = await fetch(apiUrl("/api/discovery/pipeline-status"));
           if (pipelineRes.ok) {
             const pipeline = await pipelineRes.json();
             if (pipeline.total > 0) {

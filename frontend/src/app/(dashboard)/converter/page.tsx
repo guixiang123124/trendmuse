@@ -10,7 +10,7 @@ import {
   Download,
   ArrowRight
 } from "lucide-react";
-import { scanner, converter, FashionItem, ConversionResult } from "@/lib/api";
+import { scanner, converter, FashionItem, ConversionResult, apiUrl } from "@/lib/api";
 import SketchPreview from "@/components/SketchPreview";
 
 interface SketchStyle {
@@ -37,7 +37,7 @@ export default function ConverterPage() {
   const loadData = async () => {
     try {
       // Try to load from database first
-      const dbRes = await fetch("/api/generator/items-from-db?limit=30");
+      const dbRes = await fetch(apiUrl("/api/generator/items-from-db?limit=30"));
       if (dbRes.ok) {
         const dbItems = await dbRes.json();
         if (dbItems.length > 0) {

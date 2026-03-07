@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useState, useEffect } from "react";
 import { 
@@ -66,9 +67,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/discovery/dashboard").then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch("/api/trends/summary").then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch("/api/discovery/pipeline-status").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(apiUrl("/api/discovery/dashboard")).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(apiUrl("/api/trends/summary")).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(apiUrl("/api/discovery/pipeline-status")).then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(([dash, stats, pipeline]) => {
       setDashboard(dash);
       // Merge pipeline data into stats if products table is empty
