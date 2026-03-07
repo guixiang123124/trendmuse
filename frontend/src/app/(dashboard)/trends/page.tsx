@@ -27,9 +27,27 @@ export default function TrendsPage() {
 
   const loadData = async () => {
     try {
+      // Try trends/summary first (products table)
       const res = await fetch("/api/trends/summary");
       if (res.ok) {
-        setSummary(await res.json());
+        const data = await res.json();
+        // If products table is empty, supplement with pipeline data
+        if (!data.overview?.total_products || data.overview.total_products === 0) {
+          const pipelineRes = await fetch("/api/discovery/pipeline-status");
+          if (pipelineRes.ok) {
+            const pipeline = await pipelineRes.json();
+            if (pipeline.total > 0) {
+              data.overview = {
+                total_products: pipeline.total,
+                total_sources: Object.keys(pipeline.by_source || {}).length,
+                total_categories: Object.keys(pipeline.by_source || {}).length,
+              };
+              data.by_source = pipeline.by_source || {};
+              data.pricing = data.pricing || { avg_price: 0, min_price: 0, max_price: 0 };
+            }
+          }
+        }
+        setSummary(data);
       }
     } catch (error) {
       console.error("Error:", error);

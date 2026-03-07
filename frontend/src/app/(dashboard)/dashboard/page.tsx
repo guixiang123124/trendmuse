@@ -68,9 +68,23 @@ export default function Dashboard() {
     Promise.all([
       fetch("/api/discovery/dashboard").then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("/api/trends/summary").then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([dash, stats]) => {
+      fetch("/api/discovery/pipeline-status").then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([dash, stats, pipeline]) => {
       setDashboard(dash);
-      setDbStats(stats);
+      // Merge pipeline data into stats if products table is empty
+      if (pipeline && pipeline.total > 0) {
+        setDbStats({
+          ...stats,
+          overview: {
+            ...(stats?.overview || {}),
+            total_products: stats?.overview?.total_products || pipeline.total,
+            total_sources: stats?.overview?.total_sources || Object.keys(pipeline.by_source || {}).length,
+            total_categories: stats?.overview?.total_categories || 0,
+          }
+        });
+      } else {
+        setDbStats(stats);
+      }
       setLoading(false);
     });
   }, []);
