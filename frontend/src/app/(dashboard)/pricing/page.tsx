@@ -112,6 +112,14 @@ export default function Pricing() {
       return;
     }
 
+    // Check if user is logged in first
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Redirect to login with return URL
+      window.location.href = `/login?redirect=/pricing&plan=${tier.id}&billing=${isAnnual ? 'annual' : 'monthly'}`;
+      return;
+    }
+
     setLoading(tier.id);
     
     try {
