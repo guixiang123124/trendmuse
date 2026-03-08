@@ -12,7 +12,8 @@ import {
   HelpCircle,
   BarChart3,
   Flame,
-  Globe
+  Globe,
+  CreditCard
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
 ];
 
 const bottomItems = [
+  { href: "/pricing", label: "Pricing", icon: CreditCard },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/help", label: "Help", icon: HelpCircle },
 ];

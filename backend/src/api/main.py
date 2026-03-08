@@ -11,10 +11,11 @@ from contextlib import asynccontextmanager
 import time
 
 from src.core.config import get_settings
-from src.api.routes import scanner, generator, converter, trends, discovery
+from src.api.routes import scanner, generator, converter, trends, discovery, stripe_router
 from src.models.schemas import HealthResponse
 from src.auth.router import router as auth_router
 from src.auth.models import init_db as init_auth_db
+from src.auth.migrations import run_migrations
 
 
 @asynccontextmanager
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler"""
     # Startup
     init_auth_db()
+    run_migrations()
     settings = get_settings()
     print(f"🎨 TrendMuse starting...")
     print(f"   Demo mode: {settings.demo_mode}")
@@ -83,6 +85,7 @@ app.include_router(generator.router, prefix="/api")
 app.include_router(converter.router, prefix="/api")
 app.include_router(trends.router, prefix="/api")
 app.include_router(discovery.router, prefix="/api")
+app.include_router(stripe_router.router)
 app.include_router(auth_router)
 
 

@@ -87,9 +87,62 @@ def create_user(
     now = datetime.now(timezone.utc).isoformat()
     with _get_conn() as conn:
         cursor = conn.execute(
-            """INSERT INTO users (email, username, hashed_password, full_name, google_id, credits_remaining, is_active, is_admin, created_at)
-               VALUES (?, ?, ?, ?, ?, 50, 1, 0, ?)""",
+            """INSERT INTO users (email, username, hashed_password, full_name, google_id, credits_remaining, is_active, is_admin, created_at, subscription_tier, subscription_status)
+               VALUES (?, ?, ?, ?, ?, 50, 1, 0, ?, 'free', 'inactive')""",
             (email, username, hashed_password, full_name, google_id, now),
         )
         conn.commit()
         return get_user_by_id(cursor.lastrowid)
+
+
+def update_user_subscription(
+    user_id: int,
+    stripe_customer_id: Optional[str] = None,
+    subscription_tier: Optional[str] = None,
+    subscription_status: Optional[str] = None,
+    subscription_end_date: Optional[str] = None,
+) -> bool:
+    """Update user subscription information."""
+    updates = []
+    values = []
+    
+    if stripe_customer_id is not None:
+        updates.append("stripe_customer_id = ?")
+        values.append(stripe_customer_id)
+    if subscription_tier is not None:
+        updates.append("subscription_tier = ?")
+        values.append(subscription_tier)
+    if subscription_status is not None:
+        updates.append("subscription_status = ?")
+        values.append(subscription_status)
+    if subscription_end_date is not None:
+        updates.append("subscription_end_date = ?")
+        values.append(subscription_end_date)
+    
+    if not updates:
+        return False
+        
+    values.append(user_id)
+    now = datetime.now(timezone.utc).isoformat()
+    updates.append("updated_at = ?")
+    values.append(now)
+    
+    with _get_conn() as conn:
+        conn.execute(
+            f"UPDATE users SET {', '.join(updates)} WHERE id = ?",
+            values
+        )
+        conn.commit()
+        return True
+
+
+def get_user_subscription(user_id: int) -> Optional[Dict[str, Any]]:
+    """Get user's subscription information."""
+    with _get_conn() as conn:
+        row = conn.execute(
+            """SELECT stripe_customer_id, subscription_tier, subscription_status, 
+                      subscription_end_date, credits_remaining 
+               FROM users WHERE id = ?""", 
+            (user_id,)
+        ).fetchone()
+        return _row_to_dict(row)

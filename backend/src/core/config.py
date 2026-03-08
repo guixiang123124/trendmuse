@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     # Demo mode
     demo_mode: bool = True  # Set to False when API keys are configured
     
+    # Stripe Settings
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    
     class Config:
         env_file = ".env"
         extra = "ignore"
